@@ -46,7 +46,7 @@ class DefaultChangeRenderer<E extends ChangeSet<GHCommit, GHPullRequest>> implem
         Set<Link> links = new HashSet<Link>()
 
         new StringBuilder().with {
-            append(new Headline("${changes.name} - ${changes.date.format("YYYY-MM-D")}", 1, headlineType))
+            append(new Headline("${changes.name} - ${changes.date.format("YYYY-MM-dd")}", 1, headlineType))
             if (!changes.pullRequests.empty) {
                 append(new Headline("Pull Requests", 2, headlineType))
                 changes.pullRequests.each { pr ->

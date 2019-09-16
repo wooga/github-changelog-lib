@@ -142,6 +142,27 @@ class DefaultChangeRendererSpec extends Specification {
         pullRequestTitles.every { result.contains(it) }
     }
 
+    def "renders release date in form YYYY-MM-dd"() {
+        given: "a renderer"
+        renderer = new DefaultChangeRenderer<BaseChangeSet>()
+
+        and: "a name and date for the changeset"
+        testChangeset.name = releaseName
+        testChangeset.date = releaseDate
+
+        when:
+        def result = renderer.render(testChangeset)
+
+        then:
+        noExceptionThrown()
+        result.contains("# ${releaseName} - ${releaseDateString}")
+
+        where:
+        releaseName = "TestRelease"
+        releaseDate = new Date(0)
+        releaseDateString = releaseDate.format("YYYY-MM-dd")
+    }
+
     @Unroll
     def "renders #linkTo links #type style"() {
         given: "a renderer"
