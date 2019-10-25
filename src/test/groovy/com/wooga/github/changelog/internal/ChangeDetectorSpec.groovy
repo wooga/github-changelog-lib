@@ -121,6 +121,7 @@ class ChangeDetectorSpec extends Specification {
         "v0.2.0-rc.1" | "v0.2.0-rc.2" | 8           | 1          | "develop"
         "v0.1.0"      | "v0.1.1"      | 14          | 2          | testRepo.repository.defaultBranch
         "v0.1.0"      | "v0.1.1"      | 14          | 2          | "develop"
+        "v0.2.0"      | null          | 0           | 0          | testRepo.repository.defaultBranch
     }
 
     String commitShaForCommit(int commitNumber) {
