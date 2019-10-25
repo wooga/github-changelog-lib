@@ -108,12 +108,13 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
         }
 
         commits = commits.subList(startIndex, endIndex)
+        List<GHPullRequest> pullRequests = []
 
-        assert commits.first().getSHA1() == to.getSHA1()
-
-        commits = filterUnrelatedCommits(commits)
-
-        List<GHPullRequest> pullRequests = fetchPullRequestsFromCommits(client, hub, commits, branchName)
+        if(!commits.empty) {
+            assert commits.first().getSHA1() == to.getSHA1()
+            commits = filterUnrelatedCommits(commits)
+            pullRequests = fetchPullRequestsFromCommits(client, hub, commits, branchName)
+        }
 
         new BaseChangeSet(hub.fullName, from.toString(), to.toString(), commits, pullRequests)
     }
