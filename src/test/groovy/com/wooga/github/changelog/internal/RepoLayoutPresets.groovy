@@ -26,6 +26,61 @@ import org.ajoberstar.grgit.operation.MergeOp
 
 class RepoLayoutPresets {
 
+    static void worstCaseRepoWithHighBranching(Repository repo, int merges) {
+        /*
+        NR
+
+        N      * Merge branch fix/(N-2)/3
+            ..........
+        8       *   Merge branch fix/2
+                |\
+        7       * |
+        6       | * commit 1 on fix/one
+                |/
+        5       *   Merge branch fix/1
+                |\
+        4       * |
+        3       | * commit 1 on fix/one
+                |/
+        2       * commit 1
+        1       * Initial commit
+        */
+
+        File localPath = File.createTempDir(repo.ownerName, repo.name)
+        localPath.deleteOnExit()
+
+        Credentials credentials = new Credentials(repo.userName, repo.token)
+        Grgit git = Grgit.clone(dir: localPath.path, uri: repo.httpTransportUrl, credentials: credentials) as Grgit
+
+        git.checkout(branch: "master")
+        List<Commit> log = git.log(includes: ['HEAD'], maxCommits: 1)
+        Commit initialCommit = log.first()
+        def author = initialCommit.author
+
+        def config = git.getRepository().jgit.repository.config
+        config.load()
+        config.setString("user", null, "name", author.name)
+        config.setString("user", null, "email",author.email)
+        config.setBoolean("user", null, "useConfigOnly", true)
+        config.save()
+
+        git.commit(message: "commit 2")
+        git.push(remote: "origin", all: true)
+
+        1.upto(merges, {
+            def branchName = 'fix/' + it.toString();
+            git.branch.add(name: branchName, startPoint: 'master')
+            git.checkout(branch: branchName)
+            git.commit(message: "commit 1 on " + branchName)
+            git.checkout(branch: "master")
+            git.commit(message: "commit " + ((it+2).toString()) )
+            git.merge(head: branchName, mode: MergeOp.Mode.CREATE_COMMIT)
+        });
+
+        git.push(remote: "origin", all: true)
+
+        println("")
+    }
 
     static void parallelDevelopmentOnTwoBranchesWithPullRequests(Repository repo) {
         /*
