@@ -17,6 +17,7 @@
 
 package com.wooga.github.changelog
 
+
 import com.wooga.github.changelog.changeSet.BaseChangeSet
 import com.wooga.github.changelog.internal.ChangeDetectorException
 import org.kohsuke.github.*
@@ -98,12 +99,10 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
         def startIndex = commits.findIndexOf { it.getSHA1() == to.getSHA1() }
         def endIndex = (from) ? commits.findIndexOf { it.getSHA1() == from.getSHA1() } : commits.size()
 
-        Map<String, GHCommit> commitMap = commits.inject([:]) { Map<String, GHCommit> meta, GHCommit commit ->
-            meta[commit.SHA1] = commit
-            meta
-        }
 
-        if (!isConnectedTo(commits.last(), commits.first(), commitMap)) {
+        Map<String, List<GHCommit>> childrenMap = getReverseChildrenMap(commits)
+
+        if (!isConnectedToHead(commits.last(), commits.first(), childrenMap, [:] as Map<String, Boolean>)) {
             throw new ChangeDetectorException("Commit ${commits.first().SHA1} and ${commits.last().SHA1} are not connected")
         }
 
@@ -142,36 +141,66 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
         }
     }
 
-    private static boolean isConnectedTo(GHCommit base, GHCommit head, Map<String, GHCommit> log) {
+    // recursively searches from base's children until it finds head
+    // memoizes previously found connections to head to reduce complexity
+    private static boolean isConnectedToHead(GHCommit base, GHCommit head, Map<String, List<GHCommit>> childrenMap, Map<String, Boolean> memoizedCanReachHead) {
+        if (memoizedCanReachHead.hasProperty(base.SHA1)) {
+            return memoizedCanReachHead[base.SHA1].booleanValue()
+        }
+
         if (base.SHA1 == head.SHA1) {
+            memoizedCanReachHead[base.SHA1] = Boolean.TRUE;
             return true
         }
 
-        List<GHCommit> parentCommits = head.parentSHA1s.inject(new ArrayList<GHCommit>()) { List<GHCommit> memo, String sha ->
-            if (log.containsKey(sha)) {
-                memo << log.get(sha)
-            }
-            memo
-        }
+        List<GHCommit> childrenCommits = childrenMap.containsKey(base.SHA1) ? childrenMap[base.SHA1] : [];
 
-        if (parentCommits.size() == 0) {
+        if (childrenCommits.size() == 0) {
+            memoizedCanReachHead[base.SHA1] = Boolean.FALSE;
             return false
         }
 
-        return parentCommits.any { isConnectedTo(base, it, log) }
+
+        memoizedCanReachHead[base.SHA1] = Boolean.FALSE    // to stop recursion in cyclic graphs.
+
+        // to make sure this recursive call doesn't try to re-traverse base again if it's a cyclic graph, we mark it as "false", then set the actual result afterward
+        def result = childrenCommits.any { isConnectedToHead(it, head, childrenMap, memoizedCanReachHead) }
+
+        memoizedCanReachHead[base.SHA1] = new Boolean(result)
+
+        result
     }
 
     protected static List<GHCommit> filterUnrelatedCommits(List<GHCommit> commits) {
         GHCommit head = commits.first()
+        Map<String, List<GHCommit>> childrenMap = getReverseChildrenMap(commits)
+        commits = commits.reverse()
+        Map<String, Boolean> memoizedIsConnectedToHead = [:]
+        commits = commits.findAll { isConnectedToHead(it, head, childrenMap, memoizedIsConnectedToHead) }
+        commits.reverse()
+    }
+
+    protected static Map<String, List<GHCommit>> getReverseChildrenMap(List<GHCommit> commits) {
         Map<String, GHCommit> commitMap = commits.inject([:]) { Map<String, GHCommit> meta, GHCommit commit ->
             meta[commit.SHA1] = commit
             meta
         }
 
-        commits = commits.reverse()
-        commits = commits.findAll { isConnectedTo(it, head, commitMap) }
+        // compute reverse connection
+        Map<String, List<GHCommit>> childrenMap = commits.inject([:]) { Map<String, List<GHCommit>> meta, GHCommit commit ->
+            commit.parentSHA1s.each { parentSha ->
+                if (!meta.containsKey(parentSha)) {
+                    meta[parentSha] = []
+                }
+                // limit it to the wanted range
+                if (commitMap.containsKey(parentSha)) {
+                    meta[parentSha].add(commit)
+                }
+            }
+            meta
+        }
 
-        commits.reverse()
+        childrenMap
     }
 
     protected static List<GHCommit> fetchCommits(GHRepository hub, Date from, Date to, branchName = hub.defaultBranch) {
