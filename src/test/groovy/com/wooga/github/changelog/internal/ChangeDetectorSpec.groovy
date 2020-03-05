@@ -99,7 +99,7 @@ class ChangeDetectorSpec extends Specification {
     }
 
     @Unroll
-    def "detect changes from tag #from to tag #to with #changesLogs commits and #changesPRs pull requests"() {
+    def "detect changes from tag #from to tag #to with #changesLogs commits and #changesPRs pull requests and branch #branch"() {
         given: "a detector"
         changeDetector = new DefaultChangeDetector(testRepo.client, testRepo.repository)
 
@@ -135,7 +135,7 @@ class ChangeDetectorSpec extends Specification {
     }
 
     @Unroll
-    def "detect changes from sha from number #fromNumber to sha from number #toNumber with #changesLogs commits and #changesPRs pull requests"() {
+    def "detect changes from sha from number #fromNumber to sha from number #toNumber with #changesLogs commits and #changesPRs pull requests and branch #branch"() {
         given: "a detector"
         changeDetector = new DefaultChangeDetector(testRepo.client, testRepo.repository)
 
