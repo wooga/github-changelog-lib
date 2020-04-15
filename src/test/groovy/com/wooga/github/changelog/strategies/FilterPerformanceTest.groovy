@@ -78,7 +78,6 @@ class FilterPerformanceTest extends Specification {
     }
 
     @ThreadInterrupt
-    @TimedInterrupt(value = 20L)
     @Timeout(value = 20, unit = TimeUnit.SECONDS)
     def "detectChangesFromTag should return in under 20 s"() {
         given: "changes from HEAD to root"
