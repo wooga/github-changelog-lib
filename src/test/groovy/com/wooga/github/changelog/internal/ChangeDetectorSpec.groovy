@@ -29,6 +29,102 @@ import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
+class ChangeDetectorRangeVerificationSpec extends Specification {
+
+    @Shared
+    @GithubRepository(
+            usernameEnv = "ATLAS_GITHUB_INTEGRATION_USER",
+            tokenEnv = "ATLAS_GITHUB_INTEGRATION_PASSWORD",
+            resetAfterTestCase = true,
+            repositoryNamePrefix = "github-changelog-lib-integration-change-detector-spec",
+            repositoryPostFixProvider = TravisBuildNumberPostFix.class,
+            rateLimitHandler = RateLimitHandlerWait
+    )
+    Repository testRepo
+
+    @Subject
+    DefaultChangeDetector changeDetector
+
+    @Shared
+    List<GHCommit> log
+
+    def setupSpec() {
+        /*
+        NR
+        9         * commit 4 on develop
+        8         * commit 3 on develop
+        7       * | commit 5 (tag: v0.1.1)
+        6       * | commit 4
+        5       | * commit 2 on develop
+        4       * | commit 3 (tag: v0.1.0)
+        3       | * commit 1 on develop
+                |/
+        2       * commit 2
+        1       * Initial commit
+        */
+        RepoLayoutPresets.releaseTagUnknownInSidebranch(testRepo)
+        log = testRepo.queryCommits().list().collect()
+    }
+
+    @Unroll
+    def "verifies of tags #from and #to are reachable from branch"() {
+        given: "a change detector"
+        changeDetector = new DefaultChangeDetector(testRepo.client, testRepo.repository)
+
+        when:
+        changeDetector.detectChangesFromTag(from, to, branch)
+
+        then:
+        def e = thrown(type)
+        e.message.matches(messagePattern)
+
+        where:
+        from     | to       | type                              | messagePattern
+        "v0.1.0" | null     | TagNotReachableException.class    | /Tag ${from} not reachable from branch develop/
+        "v0.1.0" | "v0.1.1" | TagNotReachableException.class    | /Tag ${to} not reachable from branch develop/
+
+        branch = "develop"
+    }
+
+    @Unroll
+    def "verifies of commit #fromNumber and #toNumber are reachable from branch"() {
+        given: "a change detector"
+        changeDetector = new DefaultChangeDetector(testRepo.client, testRepo.repository)
+
+        and: "a sha based on the from number"
+        def from = commitShaForCommit(fromNumber)
+
+        and: "a sha based on the to number"
+        def to = commitShaForCommit(toNumber)
+
+        when:
+        changeDetector.detectChangesFromSha(from, to, branch)
+
+        then:
+        def e = thrown(type)
+        e.message.matches(messagePattern)
+
+        where:
+        fromNumber | toNumber | messagePattern
+        3          | 0        | /Commit [a-z0-9]+ \(from\) not reachable from branch develop/
+        3          | 4        | /Commit [a-z0-9]+ \(to\) not reachable from branch develop/
+
+        branch = "develop"
+        type = ChangeDetectorException.class
+    }
+
+    String commitShaForCommit(int commitNumber) {
+        if (commitNumber == 0) {
+            return null
+        } else if (commitNumber >= log.size()) {
+            return "df83821329038123"
+        }
+
+        log.reverse().get(commitNumber - 1).SHA1.substring(0, 7)
+    }
+
+}
+
 class ChangeDetectorSpec extends Specification {
     @Shared
     @GithubRepository(
@@ -171,18 +267,18 @@ class ChangeDetectorSpec extends Specification {
         changeDetector = new DefaultChangeDetector(testRepo.client, testRepo.repository)
 
         when:
-        changeDetector.detectChangesFromTag(from, to)
+        changeDetector.detectChangesFromTag(from, to, branch)
 
         then:
         def e = thrown(type)
         e.message.matches(messagePattern)
 
         where:
-        from          | to            | explaination                            | type                          | messagePattern
-        "v0.2.0-rc.1" | "v0.1.1"      | "from tag is not an ancestor of to tag" | ChangeDetectorException.class | /.* are not connected/
-        "v0.1.1"      | "v0.2.0-rc.1" | "from tag is younger than to tag"       | ChangeDetectorException.class | /.* is newer than .*/
-        "0.1.1"       | "v0.2.0-rc.1" | "from tag does no exist"                | ChangeDetectorException.class | /Tag 0.1.1 could no be found/
-        "v0.1.1"      | "0.2.0-rc.1"  | "to tag does no exist"                  | ChangeDetectorException.class | /Tag 0.2.0-rc.1 could no be found/
+        from          | to            | explaination                            | branch                            | type                          | messagePattern
+        "v0.2.0-rc.1" | "v0.1.1"      | "from tag is not an ancestor of to tag" | testRepo.repository.defaultBranch | ChangeDetectorException.class | /.* are not connected/
+        "v0.1.1"      | "v0.2.0-rc.1" | "from tag is younger than to tag"       | testRepo.repository.defaultBranch | ChangeDetectorException.class | /.* is newer than .*/
+        "0.1.1"       | "v0.2.0-rc.1" | "from tag does no exist"                | testRepo.repository.defaultBranch | ChangeDetectorException.class | /Tag 0.1.1 could no be found/
+        "v0.1.1"      | "0.2.0-rc.1"  | "to tag does no exist"                  | testRepo.repository.defaultBranch | ChangeDetectorException.class | /Tag 0.2.0-rc.1 could no be found/
     }
 
     @Unroll
