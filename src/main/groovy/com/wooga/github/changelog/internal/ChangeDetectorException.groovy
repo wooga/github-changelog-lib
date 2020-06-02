@@ -18,8 +18,29 @@
 package com.wooga.github.changelog.internal
 
 import groovy.transform.InheritConstructors
+import org.kohsuke.github.GHCommit
+import org.kohsuke.github.GHTag
+import org.kohsuke.github.GHTagObject
 
 @InheritConstructors
 class ChangeDetectorException extends Exception {
-
 }
+
+class CommitNotReachableException extends ChangeDetectorException {
+    final GHCommit commit
+
+    CommitNotReachableException(GHCommit commit, String message) {
+        super(message)
+        this.commit = commit
+    }
+}
+
+class TagNotReachableException extends ChangeDetectorException {
+    final GHTag tag
+
+    TagNotReachableException(GHTag tag, String message, Throwable cause) {
+        super(message, cause)
+        this.tag = tag
+    }
+}
+

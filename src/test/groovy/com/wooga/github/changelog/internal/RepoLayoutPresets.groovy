@@ -46,23 +46,7 @@ class RepoLayoutPresets {
         1       * Initial commit
         */
 
-        File localPath = File.createTempDir(repo.ownerName, repo.name)
-        localPath.deleteOnExit()
-
-        Credentials credentials = new Credentials(repo.userName, repo.token)
-        Grgit git = Grgit.clone(dir: localPath.path, uri: repo.httpTransportUrl, credentials: credentials) as Grgit
-
-        git.checkout(branch: "master")
-        List<Commit> log = git.log(includes: ['HEAD'], maxCommits: 1)
-        Commit initialCommit = log.first()
-        def author = initialCommit.author
-
-        def config = git.getRepository().jgit.repository.config
-        config.load()
-        config.setString("user", null, "name", author.name)
-        config.setString("user", null, "email",author.email)
-        config.setBoolean("user", null, "useConfigOnly", true)
-        config.save()
+        Grgit git = setuprepo(repo)
 
         git.commit(message: "commit 2")
         git.push(remote: "origin", all: true)
@@ -80,6 +64,46 @@ class RepoLayoutPresets {
         git.push(remote: "origin", all: true)
 
         println("")
+    }
+
+    static void releaseTagUnknownInSidebranch(Repository repo) {
+        /*
+        NR
+        9         * commit 4 on develop
+        8         * commit 3 on develop
+        7       * | commit 5 (tag: v0.1.1)
+        6       * | commit 4
+        5       | * commit 2 on develop
+        4       * | commit 3 (tag: v0.1.0)
+        3       | * commit 1 on develop
+                |/
+        2       * commit 2
+        1       * Initial commit
+        */
+        Grgit git = setuprepo(repo)
+
+        git.commit(message: "commit 2")
+        git.branch.add(name: 'develop', startPoint: 'master')
+        git.checkout(branch: "develop")
+        git.commit(message: "commit 1 on develop")
+        git.checkout(branch: "master")
+        git.commit(message: "commit 3")
+        git.push(remote: "origin", all: true)
+
+        repo.createRelease("0.1.0", "v0.1.0", "master")
+
+        git.checkout(branch: "develop")
+        git.commit(message: "commit 2 on develop")
+        git.checkout(branch: "master")
+        git.commit(message: "commit 4")
+        git.commit(message: "commit 5")
+        git.push(remote: "origin", all: true)
+        repo.createRelease("0.1.1", "v0.1.1", "master")
+
+        git.checkout(branch: "develop")
+        git.commit(message: "commit 3 on develop")
+        git.commit(message: "commit 4 on develop")
+        git.push(remote: "origin", all: true)
     }
 
     static void parallelDevelopmentOnTwoBranchesWithPullRequests(Repository repo) {
@@ -129,25 +153,7 @@ class RepoLayoutPresets {
         1       * Initial commit
         */
 
-        File localPath = File.createTempDir(repo.ownerName, repo.name)
-        localPath.deleteOnExit()
-
-        Credentials credentials = new Credentials(repo.userName, repo.token)
-        Grgit git = Grgit.clone(dir: localPath.path, uri: repo.httpTransportUrl, credentials: credentials) as Grgit
-
-
-
-        git.checkout(branch: "master")
-        List<Commit> log = git.log(includes: ['HEAD'], maxCommits: 1)
-        Commit initialCommit = log.first()
-        def author = initialCommit.author
-
-        def config = git.getRepository().jgit.repository.config
-        config.load()
-        config.setString("user", null, "name", author.name)
-        config.setString("user", null, "email",author.email)
-        config.setBoolean("user", null, "useConfigOnly", true)
-        config.save()
+        Grgit git = setuprepo(repo)
 
         git.commit(message: "commit 2")
         git.commit(message: "commit 3", author: new Person("externalAuthor","external@company.com"))
@@ -243,5 +249,26 @@ class RepoLayoutPresets {
         repo.createRelease("0.2.0", "v0.2.0")
         git.pull(rebase:true, branch: "master")
         println("")
+    }
+
+    private static Grgit setuprepo(Repository repo) {
+        File localPath = File.createTempDir(repo.ownerName, repo.name)
+        localPath.deleteOnExit()
+
+        Credentials credentials = new Credentials(repo.userName, repo.token)
+        Grgit git = Grgit.clone(dir: localPath.path, uri: repo.httpTransportUrl, credentials: credentials) as Grgit
+
+        git.checkout(branch: "master")
+        List<Commit> log = git.log(includes: ['HEAD'], maxCommits: 1)
+        Commit initialCommit = log.first()
+        def author = initialCommit.author
+
+        def config = git.getRepository().jgit.repository.config
+        config.load()
+        config.setString("user", null, "name", author.name)
+        config.setString("user", null, "email", author.email)
+        config.setBoolean("user", null, "useConfigOnly", true)
+        config.save()
+        git
     }
 }

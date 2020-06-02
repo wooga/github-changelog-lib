@@ -20,6 +20,8 @@ package com.wooga.github.changelog
 
 import com.wooga.github.changelog.changeSet.BaseChangeSet
 import com.wooga.github.changelog.internal.ChangeDetectorException
+import com.wooga.github.changelog.internal.CommitNotReachableException
+import com.wooga.github.changelog.internal.TagNotReachableException
 import org.kohsuke.github.*
 
 import java.text.SimpleDateFormat
@@ -81,7 +83,15 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
             toCommit = hub.getCommit(hub.getBranch(branchName).SHA1)
         }
 
-        detectChanges(fromCommit, toCommit, branchName)
+        try {
+            detectChanges(fromCommit, toCommit, branchName)
+        } catch(CommitNotReachableException e) {
+            def tag = hub.listTags().toList().find {it.commit.SHA1 == e.commit.SHA1}
+            if(tag) {
+                throw new TagNotReachableException(tag, "Tag ${tag.name} not reachable from branch ${branchName}", e)
+            }
+            throw e
+        }
     }
 
     BaseChangeSet detectChangesToHead(GHCommit from, String branchName = hub.defaultBranch) throws ChangeDetectorException {
@@ -99,6 +109,13 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
         def startIndex = commits.findIndexOf { it.getSHA1() == to.getSHA1() }
         def endIndex = (from) ? commits.findIndexOf { it.getSHA1() == from.getSHA1() } : commits.size()
 
+        if (startIndex == -1) {
+            throw new CommitNotReachableException(to, "Commit ${to.SHA1} (to) not reachable from branch ${branchName}")
+        }
+
+        if (endIndex == -1) {
+            throw new CommitNotReachableException(from, "Commit ${from.SHA1} (from) not reachable from branch ${branchName}")
+        }
 
         Map<String, List<GHCommit>> childrenMap = getReverseChildrenMap(commits)
 
