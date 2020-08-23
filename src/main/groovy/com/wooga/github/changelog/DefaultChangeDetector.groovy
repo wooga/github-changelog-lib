@@ -41,6 +41,24 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
     }
 
     @Override
+    BaseChangeSet<GHCommit, GHPullRequest> detectChanges(String from, String to, String branchName = hub.defaultBranch) throws ChangeDetectorException {
+        GHCommit fromCommit = null
+        GHCommit toCommit
+
+        if (from) {
+            fromCommit = findCommit(from)
+        }
+
+        if (to) {
+            toCommit = findCommit(to)
+        } else {
+            toCommit = hub.getCommit(hub.getBranch(branchName).SHA1)
+        }
+
+        detectChangesFromCommit(fromCommit, toCommit, branchName)
+    }
+
+    @Override
     BaseChangeSet detectChangesFromShaToHead(String from, String branchName = hub.defaultBranch) throws ChangeDetectorException {
         detectChangesFromSha(from, null, branchName)
     }
@@ -60,7 +78,7 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
             toCommit = hub.getCommit(hub.getBranch(branchName).SHA1)
         }
 
-        detectChanges(fromCommit, toCommit, branchName)
+        detectChangesFromCommit(fromCommit, toCommit, branchName)
     }
 
     @Override
@@ -84,7 +102,7 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
         }
 
         try {
-            detectChanges(fromCommit, toCommit, branchName)
+            detectChangesFromCommit(fromCommit, toCommit, branchName)
         } catch(CommitNotReachableException e) {
             def tag = hub.listTags().toList().find {it.commit.SHA1 == e.commit.SHA1}
             if(tag) {
@@ -95,10 +113,10 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
     }
 
     BaseChangeSet detectChangesToHead(GHCommit from, String branchName = hub.defaultBranch) throws ChangeDetectorException {
-        detectChanges(from,null,branchName)
+        detectChangesFromCommit(from,null,branchName)
     }
 
-    BaseChangeSet detectChanges(GHCommit from, GHCommit to, String branchName = hub.defaultBranch) throws ChangeDetectorException {
+    BaseChangeSet detectChangesFromCommit(GHCommit from, GHCommit to, String branchName = hub.defaultBranch) throws ChangeDetectorException {
         Date fromDate = (from) ? from.commitDate : null
         Date toDate = to.commitDate
         if (fromDate && toDate && (fromDate > toDate)) {
@@ -155,6 +173,33 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
             return hub.getCommit(sha)
         } catch (GHFileNotFoundException e) {
             throw new ChangeDetectorException("Commit with sha ${sha} could no be found", e)
+        }
+    }
+
+    protected GHCommit commitFromBranch(String branchName) {
+        try {
+            GHBranch branch = hub.getBranch(branchName)
+            return commitFromSha(branch.SHA1)
+        } catch (GHFileNotFoundException e) {
+            throw new ChangeDetectorException("Branch with name ${branchName} could no be found", e)
+        }
+    }
+
+    protected GHCommit findCommit(String commitish) {
+        try {
+            return commitFromSha(commitish)
+        } catch(ChangeDetectorException ignored) {
+        }
+
+        try {
+            return commitFromTag(commitish)
+        } catch(ChangeDetectorException ignored) {
+        }
+
+        try {
+            return commitFromBranch(commitish)
+        } catch(ChangeDetectorException ignored) {
+            throw new ChangeDetectorException("Commit, Tag or Branch with name ${commitish} could no be found", e)
         }
     }
 

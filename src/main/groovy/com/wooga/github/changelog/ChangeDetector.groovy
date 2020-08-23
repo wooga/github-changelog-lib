@@ -20,6 +20,8 @@ package com.wooga.github.changelog
 import com.wooga.github.changelog.internal.ChangeDetectorException
 
 interface ChangeDetector<B> {
+    B detectChanges(String fromCommitish, String toCommitish) throws ChangeDetectorException
+    B detectChanges(String fromCommitish, String toCommitish, String branchName) throws ChangeDetectorException
     B detectChangesFromShaToHead(String from) throws ChangeDetectorException
     B detectChangesFromShaToHead(String from, String branchName) throws ChangeDetectorException
     B detectChangesFromSha(String from, String to) throws ChangeDetectorException
