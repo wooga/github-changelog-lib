@@ -220,6 +220,58 @@ class ChangeDetectorSpec extends Specification {
         "v0.2.0"      | null          | 0           | 0          | testRepo.repository.defaultBranch
     }
 
+    @Unroll
+    def "detect changes from commitish #from to commitish #to with #changesLogs commits and #changesPRs pull requests and branch #branch"() {
+        given: "a detector"
+        changeDetector = new DefaultChangeDetector(testRepo.client, testRepo.repository)
+
+        and: "a sha based on the from number"
+        if (from instanceof Integer) {
+            from = commitShaForCommit(from)
+        }
+
+        and: "a sha based on the to number"
+        if (to instanceof Integer) {
+            to = commitShaForCommit(to)
+        }
+
+        when:
+        def changes = changeDetector.detectChanges(from, to, branch)
+
+        then:
+        changes.logs.size() == changesLogs
+        changes.pullRequests.size() == changesPRs
+
+        where:
+        from          | to            | changesLogs | changesPRs | branch
+        null          | null          | 30          | 3          | testRepo.repository.defaultBranch
+        null          | null          | 29          | 3          | "develop"
+        "v0.1.0"      | null          | 24          | 3          | "develop"
+        "v0.1.0"      | null          | 25          | 3          | testRepo.repository.defaultBranch
+        "v0.1.0"      | "v0.2.0-rc.1" | 12          | 2          | "develop"
+        "v0.2.0-rc.1" | "v0.2.0-rc.2" | 8           | 1          | testRepo.repository.defaultBranch
+        "v0.2.0-rc.1" | "v0.2.0-rc.2" | 8           | 1          | "develop"
+        "v0.1.0"      | "v0.1.1"      | 14          | 2          | testRepo.repository.defaultBranch
+        "v0.1.0"      | "v0.1.1"      | 14          | 2          | "develop"
+        "v0.2.0"      | null          | 0           | 0          | testRepo.repository.defaultBranch
+        0             | 0             | 30          | 3          | testRepo.repository.defaultBranch
+        0             | 0             | 29          | 3          | "develop"
+        5             | 0             | 24          | 3          | "develop"
+        5             | 0             | 25          | 3          | testRepo.repository.defaultBranch
+        5             | 21            | 12          | 2          | "develop"
+        21            | 29            | 8           | 1          | testRepo.repository.defaultBranch
+        21            | 29            | 8           | 1          | "develop"
+        5             | 25            | 14          | 2          | testRepo.repository.defaultBranch
+        5             | 25            | 14          | 2          | "develop"
+        "fix/one"     | null          | 20          | 3          | testRepo.repository.defaultBranch
+        "fix/one"     | "master"      | 20          | 3          | testRepo.repository.defaultBranch
+        "fix/one"     | "fix/two"     | 8           | 1          | testRepo.repository.defaultBranch
+        11            | "v0.1.1"      | 8           | 1          | testRepo.repository.defaultBranch
+        "v0.2.0"      | "master"      | 0           | 0          | testRepo.repository.defaultBranch
+        11            | "master"      | 19          | 2          | testRepo.repository.defaultBranch
+    }
+
+
     String commitShaForCommit(int commitNumber) {
         if (commitNumber == 0) {
             return null
