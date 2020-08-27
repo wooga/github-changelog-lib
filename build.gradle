@@ -42,7 +42,7 @@ dependencies {
     testCompile 'org.spockframework:spock-core:1.2-groovy-2.4'
     testCompile 'com.wooga.spock.extensions:spock-github-extension:0.1.0'
     testCompile 'com.github.stefanbirkner:system-rules:1.18.0'
-    testCompile 'net.bytebuddy:byte-buddy:1.9.12'
+    testCompile 'net.bytebuddy:byte-buddy:1.10.14'
 }
 
 repositories {
