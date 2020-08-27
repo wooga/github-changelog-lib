@@ -35,7 +35,7 @@ if (cliTasks.contains("rc")) {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.4.15'
+    compile 'org.codehaus.groovy:groovy-all:3.0.5'
     compile 'org.kohsuke:github-api:1.95'
     compile 'org.apache.commons:commons-io:+'
     testCompile 'org.ajoberstar.grgit:grgit-core:4.0.2'
