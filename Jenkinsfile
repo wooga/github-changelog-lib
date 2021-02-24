@@ -9,5 +9,5 @@ withCredentials([usernamePassword(credentialsId: 'github_integration', passwordV
                                "ATLAS_GITHUB_INTEGRATION_PASSWORD=${githubPassword}"
                           ]
 
-    buildJavaLibrary plaforms: ['linux'], coverallsToken: coveralls_token, testEnvironment: testEnvironment
+    buildJavaLibraryOSSRH coverallsToken: coveralls_token, testEnvironment: testEnvironment
 }

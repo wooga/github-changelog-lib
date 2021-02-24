@@ -79,9 +79,9 @@ class ChangeDetectorRangeVerificationSpec extends Specification {
         e.message.matches(messagePattern)
 
         where:
-        from     | to       | type                              | messagePattern
-        "v0.1.0" | null     | TagNotReachableException.class    | /Tag ${from} not reachable from branch develop/
-        "v0.1.0" | "v0.1.1" | TagNotReachableException.class    | /Tag ${to} not reachable from branch develop/
+        from     | to       | type                           | messagePattern
+        "v0.1.0" | null     | TagNotReachableException.class | /Tag ${from} not reachable from branch develop/
+        "v0.1.0" | "v0.1.1" | TagNotReachableException.class | /Tag ${to} not reachable from branch develop/
 
         branch = "develop"
     }
@@ -152,7 +152,7 @@ class ChangeDetectorSpec extends Specification {
         29      | * commit 3 on develop (tag: v0.2.0-rc.2, origin/develop, develop)
         28      | * commit 2 on develop
         27      | * commit 1 on develop
-        26      | *   Merge branch 'master' into develop
+        26      | *   Merge branch repo.defaultBranch.name into develop
                 | |\
                 | |/
                 |/|
@@ -243,32 +243,32 @@ class ChangeDetectorSpec extends Specification {
         changes.pullRequests.size() == changesPRs
 
         where:
-        from          | to            | changesLogs | changesPRs | branch
-        null          | null          | 30          | 3          | testRepo.repository.defaultBranch
-        null          | null          | 29          | 3          | "develop"
-        "v0.1.0"      | null          | 24          | 3          | "develop"
-        "v0.1.0"      | null          | 25          | 3          | testRepo.repository.defaultBranch
-        "v0.1.0"      | "v0.2.0-rc.1" | 12          | 2          | "develop"
-        "v0.2.0-rc.1" | "v0.2.0-rc.2" | 8           | 1          | testRepo.repository.defaultBranch
-        "v0.2.0-rc.1" | "v0.2.0-rc.2" | 8           | 1          | "develop"
-        "v0.1.0"      | "v0.1.1"      | 14          | 2          | testRepo.repository.defaultBranch
-        "v0.1.0"      | "v0.1.1"      | 14          | 2          | "develop"
-        "v0.2.0"      | null          | 0           | 0          | testRepo.repository.defaultBranch
-        0             | 0             | 30          | 3          | testRepo.repository.defaultBranch
-        0             | 0             | 29          | 3          | "develop"
-        5             | 0             | 24          | 3          | "develop"
-        5             | 0             | 25          | 3          | testRepo.repository.defaultBranch
-        5             | 21            | 12          | 2          | "develop"
-        21            | 29            | 8           | 1          | testRepo.repository.defaultBranch
-        21            | 29            | 8           | 1          | "develop"
-        5             | 25            | 14          | 2          | testRepo.repository.defaultBranch
-        5             | 25            | 14          | 2          | "develop"
-        "fix/one"     | null          | 20          | 3          | testRepo.repository.defaultBranch
-        "fix/one"     | "master"      | 20          | 3          | testRepo.repository.defaultBranch
-        "fix/one"     | "fix/two"     | 8           | 1          | testRepo.repository.defaultBranch
-        11            | "v0.1.1"      | 8           | 1          | testRepo.repository.defaultBranch
-        "v0.2.0"      | "master"      | 0           | 0          | testRepo.repository.defaultBranch
-        11            | "master"      | 19          | 2          | testRepo.repository.defaultBranch
+        from          | to                                | changesLogs | changesPRs | branch
+        null          | null                              | 30          | 3          | testRepo.repository.defaultBranch
+        null          | null                              | 29          | 3          | "develop"
+        "v0.1.0"      | null                              | 24          | 3          | "develop"
+        "v0.1.0"      | null                              | 25          | 3          | testRepo.repository.defaultBranch
+        "v0.1.0"      | "v0.2.0-rc.1"                     | 12          | 2          | "develop"
+        "v0.2.0-rc.1" | "v0.2.0-rc.2"                     | 8           | 1          | testRepo.repository.defaultBranch
+        "v0.2.0-rc.1" | "v0.2.0-rc.2"                     | 8           | 1          | "develop"
+        "v0.1.0"      | "v0.1.1"                          | 14          | 2          | testRepo.repository.defaultBranch
+        "v0.1.0"      | "v0.1.1"                          | 14          | 2          | "develop"
+        "v0.2.0"      | null                              | 0           | 0          | testRepo.repository.defaultBranch
+        0             | 0                                 | 30          | 3          | testRepo.repository.defaultBranch
+        0             | 0                                 | 29          | 3          | "develop"
+        5             | 0                                 | 24          | 3          | "develop"
+        5             | 0                                 | 25          | 3          | testRepo.repository.defaultBranch
+        5             | 21                                | 12          | 2          | "develop"
+        21            | 29                                | 8           | 1          | testRepo.repository.defaultBranch
+        21            | 29                                | 8           | 1          | "develop"
+        5             | 25                                | 14          | 2          | testRepo.repository.defaultBranch
+        5             | 25                                | 14          | 2          | "develop"
+        "fix/one"     | null                              | 20          | 3          | testRepo.repository.defaultBranch
+        "fix/one"     | testRepo.repository.defaultBranch | 20          | 3          | testRepo.repository.defaultBranch
+        "fix/one"     | "fix/two"                         | 8           | 1          | testRepo.repository.defaultBranch
+        11            | "v0.1.1"                          | 8           | 1          | testRepo.repository.defaultBranch
+        "v0.2.0"      | testRepo.repository.defaultBranch | 0           | 0          | testRepo.repository.defaultBranch
+        11            | testRepo.repository.defaultBranch | 19          | 2          | testRepo.repository.defaultBranch
     }
 
 

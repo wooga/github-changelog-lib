@@ -60,7 +60,7 @@ class DefaultGeneratorStrategySpec extends Specification {
         29      | * commit 3 on develop (tag: v0.2.0-rc.2, origin/develop, develop)
         28      | * commit 2 on develop
         27      | * commit 1 on develop
-        26      | *   Merge branch 'master' into develop
+        26      | *   Merge branch repo.defaultBranch.name into develop
                 | |\
                 | |/
                 |/|
