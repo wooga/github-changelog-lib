@@ -53,10 +53,10 @@ class RepoLayoutPresets {
 
         1.upto(merges, {
             def branchName = 'fix/' + it.toString();
-            git.branch.add(name: branchName, startPoint: 'master')
+            git.branch.add(name: branchName, startPoint: repo.defaultBranch.name)
             git.checkout(branch: branchName)
             git.commit(message: "commit 1 on " + branchName)
-            git.checkout(branch: "master")
+            git.checkout(branch: repo.defaultBranch.name)
             git.commit(message: "commit " + ((it+2).toString()) )
             git.merge(head: branchName, mode: MergeOp.Mode.CREATE_COMMIT)
         });
@@ -83,22 +83,22 @@ class RepoLayoutPresets {
         Grgit git = setuprepo(repo)
 
         git.commit(message: "commit 2")
-        git.branch.add(name: 'develop', startPoint: 'master')
+        git.branch.add(name: 'develop', startPoint: repo.defaultBranch.name)
         git.checkout(branch: "develop")
         git.commit(message: "commit 1 on develop")
-        git.checkout(branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
         git.commit(message: "commit 3")
         git.push(remote: "origin", all: true)
 
-        repo.createRelease("0.1.0", "v0.1.0", "master")
+        repo.createRelease("0.1.0", "v0.1.0", repo.defaultBranch.name)
 
         git.checkout(branch: "develop")
         git.commit(message: "commit 2 on develop")
-        git.checkout(branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
         git.commit(message: "commit 4")
         git.commit(message: "commit 5")
         git.push(remote: "origin", all: true)
-        repo.createRelease("0.1.1", "v0.1.1", "master")
+        repo.createRelease("0.1.1", "v0.1.1", repo.defaultBranch.name)
 
         git.checkout(branch: "develop")
         git.commit(message: "commit 3 on develop")
@@ -114,7 +114,7 @@ class RepoLayoutPresets {
         29      | * commit 3 on develop (tag: v0.2.0-rc.2, origin/develop, develop)
         28      | * commit 2 on develop
         27      | * commit 1 on develop
-        26      | *   Merge branch 'master' into develop
+        26      | *   Merge branch repo.defaultBranch.name into develop
                 | |\
                 | |/
                 |/|
@@ -162,7 +162,7 @@ class RepoLayoutPresets {
         git.push(remote: "origin", all: true)
         repo.createRelease("0.1.0", "v0.1.0")
 
-        git.branch.add(name: 'fix/one', startPoint: 'master')
+        git.branch.add(name: 'fix/one', startPoint: repo.defaultBranch.name)
         git.checkout(branch: "fix/one")
 
         git.commit(message: "commit 1 on fix/one")
@@ -172,31 +172,31 @@ class RepoLayoutPresets {
         git.commit(message: "commit 5 on fix/one")
         git.push(remote: "origin", all: true)
 
-        def fixOnePr = repo.createPullRequest("A Fix PR 1", "fix/one", "master","")
+        def fixOnePr = repo.createPullRequest("A Fix PR 1", "fix/one", repo.defaultBranch.name,"")
         fixOnePr.setLabels("fix","one")
         repo.mergePullRequest(fixOnePr)
 
-        git.checkout(branch: "master")
-        git.pull(rebase:true, branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
+        git.pull(rebase:true, branch: repo.defaultBranch.name)
 
-        git.branch.add(name: 'develop', startPoint: 'master')
+        git.branch.add(name: 'develop', startPoint: repo.defaultBranch.name)
         git.branch.add(name: 'feature/one', startPoint: 'develop')
 
         git.checkout(branch: "feature/one")
         git.commit(message: "commit 1 on feature/one")
-        git.checkout(branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
         git.commit(message: "commit 6")
         git.checkout(branch: "feature/one")
         git.commit(message: "commit 2 on feature/one")
-        git.checkout(branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
         git.commit(message: "commit 7")
         git.checkout(branch: "feature/one")
         git.commit(message: "commit 3 on feature/one")
-        git.checkout(branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
         git.commit(message: "commit 8")
         git.checkout(branch: "feature/one")
         git.commit(message: "commit 4 on feature/one")
-        git.checkout(branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
         git.commit(message: "commit 9")
         git.checkout(branch: "feature/one")
         git.commit(message: "commit 5 on feature/one")
@@ -210,10 +210,10 @@ class RepoLayoutPresets {
         git.pull(rebase:true, branch: "develop")
         repo.createRelease("0.2.0-rc.1", "v0.2.0-rc.1", "develop")
 
-        git.checkout(branch: "master")
-        git.pull(rebase:true, branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
+        git.pull(rebase:true, branch: repo.defaultBranch.name)
 
-        git.branch.add(name: 'fix/two', startPoint: 'master')
+        git.branch.add(name: 'fix/two', startPoint: repo.defaultBranch.name)
         git.checkout(branch: "fix/two")
 
         git.commit(message: "commit 1 on fix/two")
@@ -221,18 +221,18 @@ class RepoLayoutPresets {
         git.commit(message: "commit 3 on fix/two")
         git.push(remote: "origin", all: true)
 
-        def fixTwoPr = repo.createPullRequest("A Fix PR 2", "fix/two", "master","")
+        def fixTwoPr = repo.createPullRequest("A Fix PR 2", "fix/two", repo.defaultBranch.name,"")
         fixTwoPr.setLabels("fix","two")
         repo.mergePullRequest(fixTwoPr)
 
-        git.checkout(branch: "master")
-        git.pull(rebase:true, branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
+        git.pull(rebase:true, branch: repo.defaultBranch.name)
 
         repo.createRelease("0.1.1", "v0.1.1")
 
         git.checkout(branch: "develop")
         git.pull(rebase:true, branch: "develop")
-        git.merge(head: "master", mode: MergeOp.Mode.CREATE_COMMIT)
+        git.merge(head: repo.defaultBranch.name, mode: MergeOp.Mode.CREATE_COMMIT)
 
         git.commit(message: "commit 1 on develop")
         git.commit(message: "commit 2 on develop")
@@ -241,13 +241,13 @@ class RepoLayoutPresets {
         git.push(remote: "origin", all: true)
         repo.createRelease("0.2.0-rc.2", "v0.2.0-rc.2", "develop")
 
-        git.checkout(branch: "master")
-        git.pull(rebase:true, branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
+        git.pull(rebase:true, branch: repo.defaultBranch.name)
         git.merge(head: "develop", mode: MergeOp.Mode.CREATE_COMMIT)
         git.push(remote: "origin", all: true)
 
         repo.createRelease("0.2.0", "v0.2.0")
-        git.pull(rebase:true, branch: "master")
+        git.pull(rebase:true, branch: repo.defaultBranch.name)
         println("")
     }
 
@@ -258,7 +258,7 @@ class RepoLayoutPresets {
         Credentials credentials = new Credentials(repo.userName, repo.token)
         Grgit git = Grgit.clone(dir: localPath.path, uri: repo.httpTransportUrl, credentials: credentials) as Grgit
 
-        git.checkout(branch: "master")
+        git.checkout(branch: repo.defaultBranch.name)
         List<Commit> log = git.log(includes: ['HEAD'], maxCommits: 1)
         Commit initialCommit = log.first()
         def author = initialCommit.author
