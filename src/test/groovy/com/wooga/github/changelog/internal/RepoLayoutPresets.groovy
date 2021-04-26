@@ -24,6 +24,8 @@ import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.Person
 import org.ajoberstar.grgit.operation.MergeOp
 
+import java.util.stream.IntStream
+
 class RepoLayoutPresets {
 
     static void worstCaseRepoWithHighBranching(Repository repo, int merges) {
@@ -103,6 +105,7 @@ class RepoLayoutPresets {
         git.checkout(branch: "develop")
         git.commit(message: "commit 3 on develop")
         git.commit(message: "commit 4 on develop")
+
         git.push(remote: "origin", all: true)
     }
 
@@ -248,6 +251,7 @@ class RepoLayoutPresets {
 
         repo.createRelease("0.2.0", "v0.2.0")
         git.pull(rebase:true, branch: repo.defaultBranch.name)
+
         println("")
     }
 
