@@ -24,8 +24,6 @@ import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.Person
 import org.ajoberstar.grgit.operation.MergeOp
 
-import java.util.stream.IntStream
-
 class RepoLayoutPresets {
 
     static void worstCaseRepoWithHighBranching(Repository repo, int merges) {
