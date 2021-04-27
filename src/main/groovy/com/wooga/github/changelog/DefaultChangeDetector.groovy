@@ -17,7 +17,6 @@
 
 package com.wooga.github.changelog
 
-
 import com.wooga.github.changelog.changeSet.BaseChangeSet
 import com.wooga.github.changelog.internal.ChangeDetectorException
 import com.wooga.github.changelog.internal.CommitNotReachableException
@@ -137,7 +136,7 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
 
         Map<String, List<GHCommit>> childrenMap = getReverseChildrenMap(commits)
 
-        if (!isConnectedToHead(commits.last(), commits.first(), childrenMap, [:] as Map<String, Boolean>)) {
+        if (!isConnectedToHead(commits.last(), commits.first(), childrenMap, [:])) {
             throw new ChangeDetectorException("Commit ${commits.first().SHA1} and ${commits.last().SHA1} are not connected")
         }
 
@@ -205,34 +204,52 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
 
     // recursively searches from base's children until it finds head
     // memoizes previously found connections to head to reduce complexity
-    private static boolean isConnectedToHead(GHCommit base, GHCommit head, Map<String, List<GHCommit>> childrenMap, Map<String, Boolean> memoizedCanReachHead) {
-        if (memoizedCanReachHead.hasProperty(base.SHA1)) {
-            return memoizedCanReachHead[base.SHA1].booleanValue()
-        }
-
+    private static boolean isConnectedToHead(GHCommit base, GHCommit head, Map<String, List<GHCommit>> childrenMap, Map<String, Boolean> isConnectedToHead) {
         if (base.SHA1 == head.SHA1) {
-            memoizedCanReachHead[base.SHA1] = Boolean.TRUE;
             return true
         }
+        Stack<GHCommit> path = new Stack<>();
+        Stack<GHCommit> commits = new Stack<>();
+        commits.addAll(getChildren(base, childrenMap))
 
-        List<GHCommit> childrenCommits = childrenMap.containsKey(base.SHA1) ? childrenMap[base.SHA1] : [];
-
-        if (childrenCommits.size() == 0) {
-            memoizedCanReachHead[base.SHA1] = Boolean.FALSE;
-            return false
+        while(!commits.empty()) { //not recursive because long trees may end up in stack overflow.
+            def current = commits.pop()
+            path.push(current)
+            if(isConnectedToHead.hasProperty(current.SHA1) && !isConnectedToHead[current.SHA1]) {
+                undoPathUpTo(path, commits.peek().parentSHA1s, isConnectedToHead)
+                continue
+            }
+            if (current.SHA1 == head.SHA1 || isConnectedToHead[current.SHA1]) {
+                path.each {isConnectedToHead[it.SHA1] = true }
+                return true
+            }
+            def currentChildren = getChildren(current, childrenMap)
+            if (currentChildren.size() > 0) {
+                commits.addAll(currentChildren)
+            } else {
+                if (!commits.empty()) {
+                    undoPathUpTo(path, commits.peek().parentSHA1s, isConnectedToHead)
+                }
+            }
         }
-
-
-        memoizedCanReachHead[base.SHA1] = Boolean.FALSE    // to stop recursion in cyclic graphs.
-
-        // to make sure this recursive call doesn't try to re-traverse base again if it's a cyclic graph, we mark it as "false", then set the actual result afterward
-        def result = childrenCommits.any { isConnectedToHead(it, head, childrenMap, memoizedCanReachHead) }
-
-        memoizedCanReachHead[base.SHA1] = new Boolean(result)
-
-        result
+        return false
     }
 
+    protected static List<GHCommit> getChildren(GHCommit parent, Map<String, List<GHCommit>> childrenMap) {
+        childrenMap.containsKey(parent.SHA1) ? childrenMap[parent.SHA1] : []
+    }
+
+    protected static void undoPathUpTo(Stack<GHCommit> path, List<String> stopPoints, Map<String, Boolean> isConnectedToHead) {
+        while(!path.empty()) {
+            def current = path.peek()
+            if (stopPoints.contains(current.SHA1)) {
+                break
+            } else {
+                isConnectedToHead[current.SHA1] = false
+                path.pop()
+            }
+        }
+    }
     protected static List<GHCommit> filterUnrelatedCommits(List<GHCommit> commits) {
         GHCommit head = commits.first()
         Map<String, List<GHCommit>> childrenMap = getReverseChildrenMap(commits)

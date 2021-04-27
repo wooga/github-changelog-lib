@@ -355,7 +355,7 @@ class ChangeDetectorSpec extends Specification {
         fromNumber | toNumber | explaination                            | type                          | messagePattern
         21         | 25       | "from sha is not an ancestor of to sha" | ChangeDetectorException.class | /.* are not connected/
         25         | 21       | "from sha is younger than to sha"       | ChangeDetectorException.class | /.* is newer than .*/
-        88         | 29       | "from sha does no exist"                | HttpException.class           | /.*No commit found for SHA: .*/
-        21         | 90       | "to tag does no exist"                  | HttpException.class           | /.*No commit found for SHA: .*/
+        200        | 29       | "from sha does not exist"                | HttpException.class           | /.*No commit found for SHA: .*/
+        21         | 800      | "to tag does not exist"                  | HttpException.class           | /.*No commit found for SHA: .*/
     }
 }

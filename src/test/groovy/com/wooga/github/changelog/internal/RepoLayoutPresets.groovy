@@ -103,6 +103,7 @@ class RepoLayoutPresets {
         git.checkout(branch: "develop")
         git.commit(message: "commit 3 on develop")
         git.commit(message: "commit 4 on develop")
+
         git.push(remote: "origin", all: true)
     }
 
@@ -248,6 +249,7 @@ class RepoLayoutPresets {
 
         repo.createRelease("0.2.0", "v0.2.0")
         git.pull(rebase:true, branch: repo.defaultBranch.name)
+
         println("")
     }
 
