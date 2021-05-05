@@ -287,10 +287,10 @@ class DefaultChangeDetector implements ChangeDetector<BaseChangeSet<GHCommit, GH
         builder.from(branchName)
 
         if (from) {
-            builder.since(githubDate(from))
+            builder.since(from)
         }
         if (to) {
-            builder.until(githubDate(to))
+            builder.until(to)
         }
 
         builder.list().collect()
