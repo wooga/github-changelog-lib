@@ -22,8 +22,10 @@ plugins {
     id 'signing'
     id 'nebula.release' version '15.3.1'
     id 'jacoco'
-    id 'com.github.kt3k.coveralls' version '2.12.0'
     id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
+    id 'net.wooga.snyk' version '0.10.0'
+    id "net.wooga.snyk-wdk-java" version "0.3.0"
+    id "net.wooga.cve-dependency-resolution" version "0.3.0"
 }
 
 group "com.wooga.github"
@@ -36,21 +38,17 @@ if (cliTasks.contains("rc")) {
 }
 
 dependencies {
-    implementation 'org.codehaus.groovy:groovy-all:2.4.15'
-    api 'org.kohsuke:github-api:1.128'
+    implementation 'org.codehaus.groovy:groovy-all:2.5.14'
+    api 'org.kohsuke:github-api:1.302'
     implementation 'org.apache.commons:commons-io:[1,2)'
-    testImplementation 'org.ajoberstar.grgit:grgit-core:4.1.0'
-    testImplementation 'org.spockframework:spock-core:1.2-groovy-2.4'
+    testImplementation 'org.ajoberstar.grgit:grgit-core:4.1.1'
+    testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
     testImplementation 'com.wooga.spock.extensions:spock-github-extension:0.1.2'
     testImplementation 'com.github.stefanbirkner:system-rules:[1.18,2)'
     testImplementation 'net.bytebuddy:byte-buddy:[1.9,2)'
 }
 
 repositories {
-    maven {
-        name = 'ajoberstar-backup'
-        url = 'https://ajoberstar.github.io/bintray-backup/'
-    }
     mavenCentral()
 }
 
