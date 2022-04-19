@@ -30,6 +30,8 @@ import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
+import java.text.SimpleDateFormat
+
 class DefaultChangeRendererSpec extends Specification {
 
     @Subject
@@ -160,7 +162,7 @@ class DefaultChangeRendererSpec extends Specification {
         where:
         releaseName = "TestRelease"
         releaseDate = new Date(0)
-        releaseDateString = releaseDate.format("YYYY-MM-dd")
+        releaseDateString = new SimpleDateFormat("YYYY-MM-dd").format(releaseDate)
     }
 
     @Unroll

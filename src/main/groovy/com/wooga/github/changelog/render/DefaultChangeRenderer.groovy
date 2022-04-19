@@ -24,6 +24,9 @@ import com.wooga.github.changelog.render.markdown.Link
 import org.kohsuke.github.GHCommit
 import org.kohsuke.github.GHPullRequest
 
+import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
+
 class DefaultChangeRenderer<E extends ChangeSet<GHCommit, GHPullRequest>> implements ChangeRenderer<E>, MarkdownRenderer {
 
     boolean generateInlineLinks = true
@@ -46,7 +49,8 @@ class DefaultChangeRenderer<E extends ChangeSet<GHCommit, GHPullRequest>> implem
         Set<Link> links = new HashSet<Link>()
 
         new StringBuilder().with {
-            append(new Headline("${changes.name} - ${changes.date.format("YYYY-MM-dd")}", 1, headlineType))
+            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
+            append(new Headline("${changes.name} - ${sdf.format(changes.date)}", 1, headlineType))
             if (!changes.pullRequests.empty) {
                 append(new Headline("Pull Requests", 2, headlineType))
                 changes.pullRequests.each { pr ->
