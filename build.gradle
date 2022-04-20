@@ -39,7 +39,7 @@ if (cliTasks.contains("rc")) {
 
 dependencies {
     implementation 'org.codehaus.groovy:groovy-all:2.5.14'
-    api 'org.kohsuke:github-api:1.302'
+    api 'org.kohsuke:github-api:1.305'
     implementation 'org.apache.commons:commons-io:[1,2)'
     testImplementation 'org.ajoberstar.grgit:grgit-core:4.1.1'
     testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
