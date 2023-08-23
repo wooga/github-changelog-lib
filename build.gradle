@@ -43,7 +43,7 @@ test {
 
 dependencies {
     implementation 'org.codehaus.groovy:groovy-all:3.0.13'
-    api 'org.kohsuke:github-api:1.302'
+    api 'org.kohsuke:github-api:1.316'
     implementation 'org.apache.commons:commons-io:[1,2)'
     testImplementation 'org.ajoberstar.grgit:grgit-core:4.1.1'
     testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
